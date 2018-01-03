@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	<PackageId>Tanius.LZ4</PackageId>
+	<Authors>Milosz Krajewski</Authors>
+	<AssemblyName>Tanius.LZ4</AssemblyName>
+	<Version>1.0.999</Version>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<Company>Milosz Krajewski</Company>
+	<Product />
+	<Description>LZ4 compression integrator</Description>
+	<Copyright>Copyright (c) 2014, Milosz Krajewski</Copyright>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Tanius.LZ4.Unsafe\Tanius.LZ4.Unsafe.csproj" />
+  </ItemGroup>
+
+</Project>

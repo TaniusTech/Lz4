@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+	<PackageId>Tanius.LZ4.Unsafe</PackageId>
+	<Authors>Milosz Krajewski</Authors>
+	<AssemblyName>Tanius.LZ4.Unsafe</AssemblyName>
+	<Version>1.0.999</Version>
+    <DebugType>embedded</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	<DefineConstants>$(DefineConstants);UNSAFE</DefineConstants>
+	<Copyright>Copyright (c) 2014, Milosz Krajewski</Copyright>
+	<Description>LZ4 compression integrator</Description>
+	<Company>Milosz Krajewski</Company>
+	<Product />
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="..\Tanius.LZ4\LZ4Codec.ps.cs">
+      <Link>LZ4Codec.ps.cs</Link>
+    </Compile>
+  </ItemGroup>
+</Project>

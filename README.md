@@ -9,3 +9,5 @@ Secondary goal is to add Native Framing support per https://github.com/lz4/lz4/w
 
 C# Port of LZ4 here https://github.com/IonKiwi/lz4.net does support LZ4 standard framing, but unfortunately it is C++ / CLI which does not work on linux / .Net Standard 2.0
 It may serve as a good example though.
+
+The original project talks about compatibility here as well https://github.com/MiloszKrajewski/lz4net#compatibility

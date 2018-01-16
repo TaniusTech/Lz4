@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tanius.LZ4", "Tanius.LZ4\Tanius.LZ4.csproj", "{9672EFAD-6F4E-4D95-ADD0-BDFA6316C140}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanius.LZ4", "Tanius.LZ4\Tanius.LZ4.csproj", "{9672EFAD-6F4E-4D95-ADD0-BDFA6316C140}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tanius.LZ4.Unsafe", "Tanius.LZ4.Unsafe\Tanius.LZ4.Unsafe.csproj", "{AC9C9F4E-CC53-4866-B0FB-97FA0ED1FDDE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tanius.LZ4.Unsafe", "Tanius.LZ4.Unsafe\Tanius.LZ4.Unsafe.csproj", "{AC9C9F4E-CC53-4866-B0FB-97FA0ED1FDDE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tanius.LZ4.Tests", "Tanius.LZ4.Tests\Tanius.LZ4.Tests.csproj", "{C4CD0017-8B25-4942-97C8-84ED520BA1E0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{AC9C9F4E-CC53-4866-B0FB-97FA0ED1FDDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AC9C9F4E-CC53-4866-B0FB-97FA0ED1FDDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AC9C9F4E-CC53-4866-B0FB-97FA0ED1FDDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C4CD0017-8B25-4942-97C8-84ED520BA1E0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C4CD0017-8B25-4942-97C8-84ED520BA1E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C4CD0017-8B25-4942-97C8-84ED520BA1E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C4CD0017-8B25-4942-97C8-84ED520BA1E0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

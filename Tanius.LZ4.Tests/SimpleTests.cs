@@ -7,7 +7,7 @@ using System.Text;
 namespace Tanius.LZ4.Tests
 {
     [TestFixture]
-    public class LZ4CodecTests
+    public class LZ4CodecTests : LZ4Tools
     {
         [Test]
         public void TestCompressStream()
@@ -16,15 +16,7 @@ namespace Tanius.LZ4.Tests
             CompressString("TestCompressStream.lz4", content);
         }
 
-        private static void CompressString(string fileName, string content)
-        {
-            FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
-            LZ4Stream lzStream = new LZ4Stream(fs, LZ4StreamMode.Compress);
-            byte[] array = Encoding.UTF8.GetBytes(content);
-            lzStream.Write(array, 0, array.Length);
-            lzStream.Close();
-            fs.Close();
-        }
+
 
         [Test]
         public void TestDecompressStream()
@@ -32,13 +24,9 @@ namespace Tanius.LZ4.Tests
             string filename = "TestDecompressStream.lz4";
             string content = "some text some textsome textsome textsome textsome text";
             CompressString(filename, content);
-            FileStream fs = new FileStream(filename, FileMode.Open);
-            LZ4Stream lzStream = new LZ4Stream(fs, LZ4StreamMode.Decompress);
-            StreamReader reader = new StreamReader(lzStream);
-            string result = reader.ReadToEnd();
+            string result = DecompressString(filename);
             Assert.AreEqual(content, result);
-            lzStream.Close();
-            fs.Close();
         }
+
     }
 }

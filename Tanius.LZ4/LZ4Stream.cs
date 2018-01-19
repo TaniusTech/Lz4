@@ -30,9 +30,9 @@ using System.IO;
 
 namespace LZ4
 {
-	// ReSharper disable once PartialTypeWithSinglePart
-	/// <summary>Block compression stream. Allows to use LZ4 for stream compression.</summary>
-	public partial class LZ4Stream: Stream
+    // ReSharper disable once PartialTypeWithSinglePart
+    /// <summary>Block compression stream. Allows to use LZ4 for stream compression.</summary>
+    public partial class LZ4Stream: Stream
 	{
 		#region ChunkFlags
 
@@ -90,20 +90,24 @@ namespace LZ4
 		/// <summary>The offset in a buffer.</summary>
 		private int _bufferOffset;
 
-		#endregion
+        private LZ4FileFormatWriter _formatWriter;
+        private LZ4FileFormatReader _formatReader;
 
-		#region constructor
 
-		/// <summary>Initializes a new instance of the <see cref="LZ4Stream" /> class.</summary>
-		/// <param name="innerStream">The inner stream.</param>
-		/// <param name="compressionMode">The compression mode.</param>
-		/// <param name="highCompression">if set to <c>true</c> high compression is used.</param>
-		/// <param name="blockSize">Size of the block.</param>
-		/// <param name="interactiveRead">if set to <c>true</c> interactive read mode is used. 
-		/// It means that <see cref="Read"/> method tries to return data as soon as possible. 
-		/// Please note, that this should be default behavior but has been made optional for 
-		/// backward compatibility. This constructor will be changed in next major release.</param>
-		[Obsolete("This constructor is obsolete")]
+        #endregion
+
+        #region constructor
+
+        /// <summary>Initializes a new instance of the <see cref="LZ4Stream" /> class.</summary>
+        /// <param name="innerStream">The inner stream.</param>
+        /// <param name="compressionMode">The compression mode.</param>
+        /// <param name="highCompression">if set to <c>true</c> high compression is used.</param>
+        /// <param name="blockSize">Size of the block.</param>
+        /// <param name="interactiveRead">if set to <c>true</c> interactive read mode is used. 
+        /// It means that <see cref="Read"/> method tries to return data as soon as possible. 
+        /// Please note, that this should be default behavior but has been made optional for 
+        /// backward compatibility. This constructor will be changed in next major release.</param>
+        [Obsolete("This constructor is obsolete")]
 		public LZ4Stream(
 			Stream innerStream,
 			LZ4StreamMode compressionMode,
@@ -136,6 +140,8 @@ namespace LZ4
 			_interactiveRead = (compressionFlags & LZ4StreamFlags.InteractiveRead) != 0;
 			_isolateInnerStream = (compressionFlags & LZ4StreamFlags.IsolateInnerStream) != 0;
 			_blockSize = Math.Max(16, blockSize);
+            _formatReader = new LZ4FileFormatReader();
+            _formatWriter = new LZ4FileFormatWriter();
 		}
 
 		#endregion
@@ -159,45 +165,7 @@ namespace LZ4
 			return new EndOfStreamException("Unexpected end of stream");
 		}
 
-		/// <summary>Tries to read variable length int.</summary>
-		/// <param name="result">The result.</param>
-		/// <returns><c>true</c> if integer has been read, <c>false</c> if end of stream has been
-		/// encountered. If end of stream has been encountered in the middle of value 
-		/// <see cref="EndOfStreamException"/> is thrown.</returns>
-		private bool TryReadVarInt(out ulong result)
-		{
-			var buffer = new byte[1];
-			var count = 0;
-			result = 0;
-
-			while (true)
-			{
-				if (_innerStream.Read(buffer, 0, 1) == 0)
-				{
-					if (count == 0) return false;
-					throw EndOfStream();
-				}
-				var b = buffer[0];
-				result = result + ((ulong)(b & 0x7F) << count);
-				count += 7;
-				if ((b & 0x80) == 0 || count >= 64) break;
-			}
-
-			return true;
-		}
-
-		/// <summary>Reads the variable length int. Work with assumption that value is in the stream
-		/// and throws exception if it isn't. If you want to check if value is in the stream
-		/// use <see cref="TryReadVarInt"/> instead.</summary>
-		/// <returns></returns>
-		private ulong ReadVarInt()
-		{
-			ulong result;
-			if (!TryReadVarInt(out result)) throw EndOfStream();
-			return result;
-		}
-
-		/// <summary>Reads the block of bytes. 
+				/// <summary>Reads the block of bytes. 
 		/// Contrary to <see cref="Stream.Read"/> does not read partial data if possible. 
 		/// If there is no data (yet) it waits.</summary>
 		/// <param name="buffer">The buffer.</param>
@@ -220,20 +188,7 @@ namespace LZ4
 			return total;
 		}
 
-		/// <summary>Writes the variable length integer.</summary>
-		/// <param name="value">The value.</param>
-		private void WriteVarInt(ulong value)
-		{
-			var buffer = new byte[1];
-			while (true)
-			{
-				var b = (byte)(value & 0x7F);
-				value >>= 7;
-				buffer[0] = (byte)(b | (value == 0 ? 0 : 0x80));
-				_innerStream.Write(buffer, 0, 1);
-				if (value == 0) break;
-			}
-		}
+		
 
 		/// <summary>Flushes current chunk.</summary>
 		private void FlushCurrentChunk()
@@ -254,14 +209,14 @@ namespace LZ4
 
 			var isCompressed = compressedLength < _bufferOffset;
 
-			var flags = ChunkFlags.None;
+			//var flags = ChunkFlags.None;
 
-			if (isCompressed) flags |= ChunkFlags.Compressed;
-			if (_highCompression) flags |= ChunkFlags.HighCompression;
+			//if (isCompressed) flags |= ChunkFlags.Compressed;
+			//if (_highCompression) flags |= ChunkFlags.HighCompression;
 
-			WriteVarInt((ulong)flags);
-			WriteVarInt((ulong)_bufferOffset);
-			if (isCompressed) WriteVarInt((ulong)compressedLength);
+			//WriteVarInt((ulong)flags);
+			//WriteVarInt((ulong)_bufferOffset);
+			//if (isCompressed) WriteVarInt((ulong)compressedLength);
 
 			_innerStream.Write(compressed, 0, compressedLength);
 
@@ -275,16 +230,20 @@ namespace LZ4
 		{
 			do
 			{
-				ulong varint;
-				if (!TryReadVarInt(out varint)) return false;
-				var flags = (ChunkFlags)varint;
-				var isCompressed = (flags & ChunkFlags.Compressed) != 0;
+                _formatReader.ReadHeader(_innerStream);
+                //ulong varint;
+                //if (!TryReadVarInt(out varint)) return false;
+                //var flags = (ChunkFlags)varint;
+                //var isCompressed = (flags & ChunkFlags.Compressed) != 0;
 
-				var originalLength = (int)ReadVarInt();
-				var compressedLength = isCompressed ? (int)ReadVarInt() : originalLength;
-				if (compressedLength > originalLength) throw EndOfStream(); // corrupted
+                //var originalLength = (int)ReadVarInt();
+                //var compressedLength = isCompressed ? (int)ReadVarInt() : originalLength;
+                int compressedLength = 0; ;
+                int originalLength = 0;
+                bool isCompressed = false;
+                if (compressedLength > originalLength) throw EndOfStream(); // corrupted
 
-				var compressed = new byte[compressedLength];
+                var compressed = new byte[compressedLength];
 				var chunk = ReadBlock(compressed, 0, compressedLength);
 
 				if (chunk != compressedLength) throw EndOfStream(); // corrupted
@@ -298,9 +257,9 @@ namespace LZ4
 				{
 					if (_buffer == null || _buffer.Length < originalLength)
 						_buffer = new byte[originalLength];
-					var passes = (int)flags >> 2;
-					if (passes != 0)
-						throw new NotSupportedException("Chunks with multiple passes are not supported.");
+					//var passes = (int)flags >> 2;
+					//if (passes != 0)
+					//	throw new NotSupportedException("Chunks with multiple passes are not supported.");
 					LZ4Codec.Decode(compressed, 0, compressedLength, _buffer, 0, originalLength, true);
 					_bufferLength = originalLength;
 				}

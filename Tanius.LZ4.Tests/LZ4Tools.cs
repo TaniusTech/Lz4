@@ -28,12 +28,12 @@ namespace Tanius.LZ4.Tests
         {
             var fs = new FileStream(fileName, FileMode.OpenOrCreate);
             var lzStream = new LZ4Stream(fs, LZ4StreamMode.Compress);
-            var array = Encoding.UTF8.GetBytes(content);
+            var array = Encoding.ASCII.GetBytes(content);
             lzStream.Write(array, 0, array.Length);
             lzStream.Close();
             fs.Close();
         }
-        public static bool CompressWithCommandLineTools(string lz4fileName, string contentFileName) => InvokeCommandLineTools(contentFileName, lz4fileName, "-f");
+        public static bool CompressWithCommandLineTools(string lz4fileName, string contentFileName) => InvokeCommandLineTools(contentFileName, lz4fileName, "-f -9");
 
         public static string DecompressString(string filename)
         {

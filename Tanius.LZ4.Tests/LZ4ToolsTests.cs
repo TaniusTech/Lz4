@@ -32,6 +32,27 @@ namespace Tanius.LZ4.Tests
             string result =DecompressString(fileNameLZ4);
             Assert.AreEqual(content, result);
         }
+        [Test]
+        public void TestCompressStreamWithLZ4ToolsAndLoadWithLZ4Stream2()
+        {
+            var fileName = "TestCompressStreamWithLZ4ToolsAndLoadWithLZ4Stream2.txt";
+            var fileNameLZ4 = "TestCompressStreamWithLZ4ToolsAndLoadWithLZ4Stream2.lz4";
+
+            var content = "test test test testtesttesttesttesttesttesttesttest test ";
+            File.WriteAllText(fileName, content);
+            CompressWithCommandLineTools(fileNameLZ4, fileName);
+
+            string result = DecompressString(fileNameLZ4);
+            Assert.AreEqual(content, result);
+        }
+        [Test]
+        public void TestCompressStream2()
+        {
+            var fileNameLZ4 = "TestCompressStream2.lz4";
+
+            var content = "test test test testtesttesttesttesttesttesttesttest test ";
+            CompressString(fileNameLZ4, content);
+        }
 
     }
 }

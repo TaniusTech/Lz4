@@ -408,7 +408,7 @@ namespace LZ4pn
 				input, inputOffset, ref inputLength,
 				output, outputOffset, ref outputLength);
 
-			if (outputLength == 0) return 0;
+			//if (outputLength == 0) return 0;
 
 			fixed (byte* inputPtr = &input[inputOffset])
 			fixed (byte* outputPtr = &output[outputOffset])

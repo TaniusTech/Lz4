@@ -167,6 +167,9 @@ namespace LZ4
             }
         }
 
+        private static ILZ4Service NoAutoTest(ILZ4Service service)
+        { return service; }
+
         /// <summary>Performs the quick auto-test on given compression service.</summary>
         /// <param name="service">The service.</param>
         /// <returns>A service or <c>null</c> if it failed.</returns>
@@ -280,7 +283,7 @@ namespace LZ4
         {
             try
             {
-                return AutoTest(new T());
+                return NoAutoTest(new T());
             }
             catch (Exception)
             {

@@ -90,8 +90,8 @@ namespace LZ4
 		/// <summary>The offset in a buffer.</summary>
 		private int _bufferOffset;
 
-        private LZ4FileFormatWriter _formatWriter;
-        private LZ4FileFormatReader _formatReader;
+        private LZ4FileFormatWriter _formatWriter = new LZ4FileFormatWriter();
+        private LZ4FileFormatReader _formatReader = new LZ4FileFormatReader();
 
 
         #endregion
@@ -222,15 +222,19 @@ namespace LZ4
 
 			_bufferOffset = 0;
 		}
-
-		/// <summary>Reads the next chunk from stream.</summary>
-		/// <returns><c>true</c> if next has been read, or <c>false</c> if it is legitimate end of file.
-		/// Throws <see cref="EndOfStreamException"/> if end of stream was unexpected.</returns>
-		private bool AcquireNextChunk()
+        LZ4FileHeaderInfo fileHeaderInfo = null;
+        LZ4HeaderChunkInfo blockInfo = null;
+        /// <summary>Reads the next chunk from stream.</summary>
+        /// <returns><c>true</c> if next has been read, or <c>false</c> if it is legitimate end of file.
+        /// Throws <see cref="EndOfStreamException"/> if end of stream was unexpected.</returns>
+        private bool AcquireNextChunk()
 		{
 			do
 			{
-                _formatReader.ReadHeader(_innerStream);
+               if(fileHeaderInfo == null) fileHeaderInfo = _formatReader.ReadHeader(_innerStream);
+                if (blockInfo != null && blockInfo.ChunkSize <= 0) return false;
+                    blockInfo = _formatReader.ReadChunkHeader(_innerStream);
+
                 //ulong varint;
                 //if (!TryReadVarInt(out varint)) return false;
                 //var flags = (ChunkFlags)varint;
@@ -238,10 +242,11 @@ namespace LZ4
 
                 //var originalLength = (int)ReadVarInt();
                 //var compressedLength = isCompressed ? (int)ReadVarInt() : originalLength;
-                int compressedLength = 0; ;
-                int originalLength = 0;
-                bool isCompressed = false;
-                if (compressedLength > originalLength) throw EndOfStream(); // corrupted
+                int compressedLength = blockInfo.ChunkSize;
+                if (compressedLength <= 0) return false;
+                //int originalLength = 0;
+                bool isCompressed = blockInfo.IsCompressed;
+                //if (compressedLength > originalLength) throw EndOfStream(); // corrupted
 
                 var compressed = new byte[compressedLength];
 				var chunk = ReadBlock(compressed, 0, compressedLength);
@@ -255,13 +260,13 @@ namespace LZ4
 				}
 				else
 				{
-					if (_buffer == null || _buffer.Length < originalLength)
-						_buffer = new byte[originalLength];
-					//var passes = (int)flags >> 2;
-					//if (passes != 0)
-					//	throw new NotSupportedException("Chunks with multiple passes are not supported.");
-					LZ4Codec.Decode(compressed, 0, compressedLength, _buffer, 0, originalLength, true);
-					_bufferLength = originalLength;
+                    if (_buffer == null)
+                        _buffer = new byte[GetBuferSize(fileHeaderInfo.FrameDescriptor_BD_BlockMaxSize)];
+                    //var passes = (int)flags >> 2;
+                    //if (passes != 0)
+                    //	throw new NotSupportedException("Chunks with multiple passes are not supported.");
+                    _bufferLength = LZ4Codec.Decode(compressed, 0, compressedLength, _buffer, 0, 56, true);//TODO
+					//_bufferLength = originalLength;
 				}
 
 				_bufferOffset = 0;
@@ -269,7 +274,19 @@ namespace LZ4
 
 			return true;
 		}
-
+        protected int GetBuferSize(BlockMaximumSize blockMaximumSize) {
+            switch (blockMaximumSize) {
+                case BlockMaximumSize.Block64K:
+                default:
+                    return 256 * 256;
+                case BlockMaximumSize.Block256K:
+                    return 256 * 256 * 4;
+                case BlockMaximumSize.Block1MB:
+                    return 256 * 256 * 16;
+                case BlockMaximumSize.Block4MB:
+                    return 256 * 256 * 64;
+            }
+        }
 		#endregion
 
 		#region overrides

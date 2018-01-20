@@ -1,24 +1,52 @@
 ﻿using System;
+using System.IO;
 
 namespace LZ4
 {
+    public enum BlockMaximumSize : byte
+    {
+        Block64K = 4,
+        Block256K = 5,
+        Block1MB = 6,
+        Block4MB = 7
+    }
+
     public class LZ4FileHeaderInfo
     {
-        public byte[] MagicNumber { get { return new byte[] { 0x18, 0x4d, 0x22, 0x04 }; } }
-        public byte FrameDescriptor_FLG { get { return 0; } }
-        public byte FrameDescriptor_BD { get { return 0; } }
-        public int FrameDescriptor_ContentSize { get { return 0; } }
-        public byte FrameDescriptor_HC { get { return 0; } }
+        byte frameDescriptor_BD;
+        long frameDescriptor_ContentSize;
 
-        public byte FrameDescriptor_FLG_Version { get { return 0; } }
-        public byte FrameDescriptor_FLG_BIndep { get { return 0; } }
+        byte frameDescriptor_FLG;
+        byte frameDescriptor_HC;
 
-        public byte FrameDescriptor_FLG_BChecksum { get { return 0; } }
+        public LZ4FileHeaderInfo(Stream stream)
+        {
+            for (var i = 0; i < 4; i++)
+            {
+                var cByte = (byte)stream.ReadByte();
+                if (cByte != MagicNumber[i]) throw new Exception("incorrect stream format");
+            }
+            frameDescriptor_FLG = (byte)stream.ReadByte();
+            if (FrameDescriptor_FLG_Version != 64) throw new Exception("incompatible format version");
+            frameDescriptor_BD = (byte)stream.ReadByte();
+            if (FrameDescriptor_FLG_ContentSize)
+            {
+                throw new NotImplementedException();
+            }
+            frameDescriptor_HC = (byte)stream.ReadByte();
+            //TODO add checksum test
+        }
 
-        public byte FrameDescriptor_FLG_ChunkSize { get { return 0; } }
-        public byte FrameDescriptor_FLG_ChunkChecksum { get { return 0; } }
+        byte FrameDescriptor_FLG_Version => (byte)(frameDescriptor_FLG & 0b11000000);
 
-        public byte FrameDescriptor_BD_BlockMaxSize { get { return 0; } }
+        byte[] MagicNumber => new byte[] { 0x04, 0x22, 0x4d, 0x18 };
+
+        public BlockMaximumSize FrameDescriptor_BD_BlockMaxSize => (BlockMaximumSize)((frameDescriptor_BD & 0b01110000) >> 4);
+
+        public bool FrameDescriptor_FLG_BChecksum => (frameDescriptor_FLG & 0b00010000) > 0;
+        public bool FrameDescriptor_FLG_BIndependence => (frameDescriptor_FLG & 0b00100000) > 0;
+        public bool FrameDescriptor_FLG_ContentChecksum => (frameDescriptor_FLG & 0b00000100) > 0;
+        public bool FrameDescriptor_FLG_ContentSize => (frameDescriptor_FLG & 0b00001000) > 0;
 
     }
 }

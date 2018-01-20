@@ -4,7 +4,7 @@ using System.IO;
 
 namespace Tanius.LZ4.Tests
 {
-    [TestFixture]
+[TestFixture]
     public class LZ4ToolsTests : LZ4Tools
     {
 

@@ -260,12 +260,13 @@ namespace LZ4
 				}
 				else
 				{
+                    int bSize = GetBuferSize(fileHeaderInfo.FrameDescriptor_BD_BlockMaxSize);
                     if (_buffer == null)
-                        _buffer = new byte[GetBuferSize(fileHeaderInfo.FrameDescriptor_BD_BlockMaxSize)];
+                        _buffer = new byte[bSize];
                     //var passes = (int)flags >> 2;
                     //if (passes != 0)
                     //	throw new NotSupportedException("Chunks with multiple passes are not supported.");
-                    _bufferLength = LZ4Codec.Decode(compressed, 0, compressedLength, _buffer, 0, 56, true);//TODO
+                    _bufferLength = LZ4Codec.Decode(compressed, 0, compressedLength, _buffer, 0, bSize, false);
 					//_bufferLength = originalLength;
 				}
 

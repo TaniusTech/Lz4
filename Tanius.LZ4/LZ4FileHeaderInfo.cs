@@ -19,6 +19,11 @@ namespace LZ4
         byte frameDescriptor_FLG;
         byte frameDescriptor_HC;
 
+        public LZ4FileHeaderInfo()
+        {
+
+        }
+
         public LZ4FileHeaderInfo(Stream stream)
         {
             for (var i = 0; i < 4; i++)
@@ -34,19 +39,35 @@ namespace LZ4
                 throw new NotImplementedException();
             }
             frameDescriptor_HC = (byte)stream.ReadByte();
-            //TODO add checksum test
         }
 
-        byte FrameDescriptor_FLG_Version => (byte)(frameDescriptor_FLG & 0b11000000);
+        byte FrameDescriptor_FLG_Version => (byte)(frameDescriptor_FLG & 0b1100_0000);
 
         byte[] MagicNumber => new byte[] { 0x04, 0x22, 0x4d, 0x18 };
 
-        public BlockMaximumSize FrameDescriptor_BD_BlockMaxSize => (BlockMaximumSize)((frameDescriptor_BD & 0b01110000) >> 4);
+        public BlockMaximumSize FrameDescriptor_BD_BlockMaxSize {
+            get => (BlockMaximumSize)((frameDescriptor_BD & 0b0111_0000) >> 4);
+            set => frameDescriptor_BD = (byte)((int)value << 4);
+        }
 
-        public bool FrameDescriptor_FLG_BChecksum => (frameDescriptor_FLG & 0b00010000) > 0;
-        public bool FrameDescriptor_FLG_BIndependence => (frameDescriptor_FLG & 0b00100000) > 0;
-        public bool FrameDescriptor_FLG_ContentChecksum => (frameDescriptor_FLG & 0b00000100) > 0;
-        public bool FrameDescriptor_FLG_ContentSize => (frameDescriptor_FLG & 0b00001000) > 0;
+        public bool FrameDescriptor_FLG_BChecksum {
+            get => (frameDescriptor_FLG & 0b0001_0000) > 0;
+            set => frameDescriptor_FLG = value ? frameDescriptor_FLG |= 0b0001_0000 : frameDescriptor_FLG &= 0b1110_1111;
+        }
 
+        public bool FrameDescriptor_FLG_BIndependence {
+            get => (frameDescriptor_FLG & 0b0010_0000) > 0;
+            set => frameDescriptor_FLG = value ? frameDescriptor_FLG |= 0b0010_0000 : frameDescriptor_FLG &= 0b1101_1111;
+        }
+
+        public bool FrameDescriptor_FLG_ContentChecksum {
+            get => (frameDescriptor_FLG & 0b0000_0100) > 0;
+            set => frameDescriptor_FLG = value ? frameDescriptor_FLG |= 0b0000_0100 : frameDescriptor_FLG &= 0b1111_1011;
+        }
+
+        public bool FrameDescriptor_FLG_ContentSize {
+            get => (frameDescriptor_FLG & 0b0000_1000) > 0;
+            set => frameDescriptor_FLG = value ? frameDescriptor_FLG |= 0b0000_1000 : frameDescriptor_FLG &= 0b1111_0111;
+        }
     }
 }

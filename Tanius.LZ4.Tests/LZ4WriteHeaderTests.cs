@@ -1,75 +1,79 @@
 ﻿using LZ4;
 using NUnit.Framework;
 using System;
-using System.IO;
 
 namespace Tanius.LZ4.Tests
 {
-[TestFixture]
-    public class LZ4ReadHeaderTests : LZ4Tools
+    [TestFixture]
+    public class LZ4WriteHeaderTests : LZ4Tools
     {
-        const string STR_Lz4 = "TestCompressStreamWithLZ4ToolsAndLoadWithLZ4Stream.lz4";
         LZ4FileHeaderInfo info;
         LZ4HeaderChunkInfo chunkInfo;
 
         [SetUp]
         public void SetUp()
         {
-            var fileName = "TestCompressStreamWithLZ4ToolsAndLoadWithLZ4Stream.txt";
-            var fileNameLZ4 = STR_Lz4;
-            var content = "test test test testtesttesttesttesttesttesttesttest test";
-            File.WriteAllText(fileName, content);
-            CompressWithCommandLineTools(fileNameLZ4, fileName);
-            using (var fs = new FileStream(STR_Lz4, FileMode.Open))
-            {
-                LZ4FileFormatReader reader = new LZ4FileFormatReader();
-                info = reader.ReadHeader(fs);
-                chunkInfo = reader.ReadChunkHeader(fs);
-            }
+            info = new LZ4FileHeaderInfo();
+            chunkInfo = new LZ4HeaderChunkInfo();
         }
-
         [Test]
         public void TestSimple()
         {
-            Assert.IsTrue(info!= null);            
+            Assert.IsTrue(info != null);
         }
 
         [Test]
-        public void TestBlockIndependance()
+        public void TestBlockIndependence()
         {
+            info.FrameDescriptor_FLG_BIndependence = true;
             Assert.IsTrue(info.FrameDescriptor_FLG_BIndependence);
         }
 
         [Test]
         public void TestBlockChunkChecksum()
         {
+            info.FrameDescriptor_FLG_ContentChecksum = true;
             Assert.True(info.FrameDescriptor_FLG_ContentChecksum);
         }
         [Test]
         public void TestBlockChunkSize()
         {
+            info.FrameDescriptor_FLG_ContentSize = true;
+            Assert.IsTrue(info.FrameDescriptor_FLG_ContentSize);
+
+            info.FrameDescriptor_FLG_ContentSize = false;
             Assert.IsFalse(info.FrameDescriptor_FLG_ContentSize);
         }
+
         [Test]
         public void TestBlockChecksum()
         {
+            info.FrameDescriptor_FLG_BChecksum = true;
+            Assert.IsTrue(info.FrameDescriptor_FLG_BChecksum);
+
+            info.FrameDescriptor_FLG_BChecksum = false;
             Assert.IsFalse(info.FrameDescriptor_FLG_BChecksum);
         }
         [Test]
         public void TestBlockMaxSize()
         {
+            info.FrameDescriptor_BD_BlockMaxSize = BlockMaximumSize.Block64K;
             Assert.AreEqual(BlockMaximumSize.Block64K, info.FrameDescriptor_BD_BlockMaxSize);
         }
         [Test]
         public void TestChunkSize()
         {
+            chunkInfo.ChunkSize = 18;
             Assert.AreEqual(18, chunkInfo.ChunkSize);
         }
         [Test]
-        public void TestChunkcompressed()
+        public void TestChunkCompressed()
         {
+            chunkInfo.IsCompressed = true;
             Assert.IsTrue(chunkInfo.IsCompressed);
-        }
+            chunkInfo.IsCompressed = false;
+            Assert.IsFalse(chunkInfo.IsCompressed);
 
+        }
     }
 }

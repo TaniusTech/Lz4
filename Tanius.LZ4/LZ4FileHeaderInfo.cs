@@ -41,9 +41,27 @@ namespace LZ4
             frameDescriptor_HC = (byte)stream.ReadByte();
         }
 
-        byte FrameDescriptor_FLG_Version => (byte)(frameDescriptor_FLG & 0b1100_0000);
+        public byte FrameDescriptor_FLG_Version {
+            get {
+                return (byte)(frameDescriptor_FLG & 0b1100_0000);
+            }
+            set => frameDescriptor_FLG |= (byte)(value & 0b1100_0000);
+        }
 
         byte[] MagicNumber => new byte[] { 0x04, 0x22, 0x4d, 0x18 };
+
+        public static void WriteHeader(Stream stream, LZ4FileHeaderInfo headerInfo)
+        {
+            for (var i = 0; i < 4; i++)
+                stream.WriteByte(headerInfo.MagicNumber[i]);
+            stream.WriteByte(headerInfo.frameDescriptor_FLG);
+            stream.WriteByte(headerInfo.frameDescriptor_BD);
+            if (headerInfo.FrameDescriptor_FLG_ContentSize)
+            {
+                throw new NotImplementedException();
+            }
+            stream.WriteByte(headerInfo.frameDescriptor_HC);
+        }
 
         public BlockMaximumSize FrameDescriptor_BD_BlockMaxSize {
             get => (BlockMaximumSize)((frameDescriptor_BD & 0b0111_0000) >> 4);

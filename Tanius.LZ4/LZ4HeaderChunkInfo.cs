@@ -9,7 +9,7 @@ namespace LZ4
 
         public LZ4HeaderChunkInfo() => sizeBytes = new byte[4];
 
-        public LZ4HeaderChunkInfo(Stream stream)
+        public LZ4HeaderChunkInfo(Stream stream): this()
         {
             for (var i = 0; i < 4; i++)
                 sizeBytes[i] = (byte)stream.ReadByte();
@@ -37,6 +37,11 @@ namespace LZ4
                     sizeBytes[3] = sizeBytes[3] |= 0b1000_0000;
                 }
             }
+        }
+        public static void WriteHeader(Stream stream, LZ4HeaderChunkInfo chunkInfo)
+        {
+            for (var i = 0; i < 4; i++)
+                stream.WriteByte(chunkInfo.sizeBytes[i]);
         }
     }
 }

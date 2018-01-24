@@ -50,6 +50,7 @@ namespace LZ4
         }
 
         public bool ReadFooter(object input) => false;
+        
         public LZ4FileHeaderInfo ReadHeader(Stream stream)
         {
             var info = new LZ4FileHeaderInfo(stream);

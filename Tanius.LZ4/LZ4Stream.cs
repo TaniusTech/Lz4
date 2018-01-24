@@ -90,8 +90,8 @@ namespace LZ4
 		/// <summary>The offset in a buffer.</summary>
 		private int _bufferOffset;
 
-        private LZ4FileFormatWriter _formatWriter = new LZ4FileFormatWriter();
-        private LZ4FileFormatReader _formatReader = new LZ4FileFormatReader();
+        private LZ4FileFormatWriter _formatWriter;
+        private LZ4FileFormatReader _formatReader;
 
 
         #endregion
@@ -209,16 +209,24 @@ namespace LZ4
 
 			var isCompressed = compressedLength < _bufferOffset;
 
-			//var flags = ChunkFlags.None;
+            if (fileHeaderInfo == null)
+            {
+                fileHeaderInfo = new LZ4FileHeaderInfo();
+                fileHeaderInfo.FrameDescriptor_BD_BlockMaxSize = BlockMaximumSize.Block64K;
+                fileHeaderInfo.FrameDescriptor_FLG_BChecksum = false;
+                fileHeaderInfo.FrameDescriptor_FLG_BIndependence = true;
+                fileHeaderInfo.FrameDescriptor_FLG_ContentChecksum = true;
+                fileHeaderInfo.FrameDescriptor_FLG_ContentSize = false;
+                fileHeaderInfo.FrameDescriptor_FLG_Version = 64;
 
-			//if (isCompressed) flags |= ChunkFlags.Compressed;
-			//if (_highCompression) flags |= ChunkFlags.HighCompression;
+                LZ4FileHeaderInfo.WriteHeader(_innerStream, fileHeaderInfo);
+            }
+            LZ4HeaderChunkInfo chunkInfo = new LZ4HeaderChunkInfo();
+            chunkInfo.IsCompressed = true;
+            chunkInfo.ChunkSize = compressedLength;
+            LZ4HeaderChunkInfo.WriteHeader(_innerStream, chunkInfo);
 
-			//WriteVarInt((ulong)flags);
-			//WriteVarInt((ulong)_bufferOffset);
-			//if (isCompressed) WriteVarInt((ulong)compressedLength);
-
-			_innerStream.Write(compressed, 0, compressedLength);
+            _innerStream.Write(compressed, 0, compressedLength);
 
 			_bufferOffset = 0;
 		}
@@ -228,53 +236,36 @@ namespace LZ4
         /// <returns><c>true</c> if next has been read, or <c>false</c> if it is legitimate end of file.
         /// Throws <see cref="EndOfStreamException"/> if end of stream was unexpected.</returns>
         private bool AcquireNextChunk()
-		{
-			do
-			{
-               if(fileHeaderInfo == null) fileHeaderInfo = _formatReader.ReadHeader(_innerStream);
+        {
+            do
+            {
+                if (fileHeaderInfo == null) fileHeaderInfo = _formatReader.ReadHeader(_innerStream);
                 if (blockInfo != null && blockInfo.ChunkSize <= 0) return false;
-                    blockInfo = _formatReader.ReadChunkHeader(_innerStream);
-
-                //ulong varint;
-                //if (!TryReadVarInt(out varint)) return false;
-                //var flags = (ChunkFlags)varint;
-                //var isCompressed = (flags & ChunkFlags.Compressed) != 0;
-
-                //var originalLength = (int)ReadVarInt();
-                //var compressedLength = isCompressed ? (int)ReadVarInt() : originalLength;
+                blockInfo = _formatReader.ReadChunkHeader(_innerStream);
                 int compressedLength = blockInfo.ChunkSize;
-                if (compressedLength <= 0) return false;
-                //int originalLength = 0;
+                if (compressedLength <= 0 || compressedLength > GetBuferSize(fileHeaderInfo.FrameDescriptor_BD_BlockMaxSize)) return false;
                 bool isCompressed = blockInfo.IsCompressed;
-                //if (compressedLength > originalLength) throw EndOfStream(); // corrupted
-
                 var compressed = new byte[compressedLength];
-				var chunk = ReadBlock(compressed, 0, compressedLength);
-
-				if (chunk != compressedLength) throw EndOfStream(); // corrupted
-
-				if (!isCompressed)
-				{
-					_buffer = compressed; // no compression on this chunk
-					_bufferLength = compressedLength;
-				}
-				else
-				{
+                var chunk = ReadBlock(compressed, 0, compressedLength);
+                if (chunk != compressedLength) throw EndOfStream(); // corrupted
+                if (!isCompressed)
+                {
+                    _buffer = compressed; // no compression on this chunk
+                    _bufferLength = compressedLength;
+                }
+                else
+                {
                     int bSize = GetBuferSize(fileHeaderInfo.FrameDescriptor_BD_BlockMaxSize);
                     if (_buffer == null)
                         _buffer = new byte[bSize];
-                    //var passes = (int)flags >> 2;
-                    //if (passes != 0)
-                    //	throw new NotSupportedException("Chunks with multiple passes are not supported.");
                     _bufferLength = LZ4Codec.Decode(compressed, 0, compressedLength, _buffer, 0, bSize, false);
-					//_bufferLength = originalLength;
-				}
+                }
 
-				_bufferOffset = 0;
-			} while (_bufferLength == 0); // skip empty block (shouldn't happen but...)
+                _bufferOffset = 0;
+            } while (_bufferLength == 0); // skip empty block (shouldn't happen but...)
 
-			return true;
-		}
+            return true;
+        }
         protected int GetBuferSize(BlockMaximumSize blockMaximumSize) {
             switch (blockMaximumSize) {
                 case BlockMaximumSize.Block64K:

@@ -10,7 +10,7 @@ namespace Tanius.LZ4.Tests
     [TestFixture]
     public class LZ4Tools
     {
-        protected static string GetLZ4ToolPath() => @"C:\msys64\mingw32\bin\lz4.exe";
+        protected static string GetLZ4ToolPath() => @"C:\msys64\mingw32\bin\lz4.exe";//TODO RK: this path is specific to my laptop
 
         protected static bool InvokeCommandLineTools(string lz4fileName, string contentFileName, string arguments)
         {

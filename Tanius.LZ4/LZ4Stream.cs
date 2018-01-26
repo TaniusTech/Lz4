@@ -219,6 +219,10 @@ namespace LZ4
                 fileHeaderInfo.FrameDescriptor_FLG_ContentSize = false;
                 fileHeaderInfo.FrameDescriptor_FLG_Version = 64;
 
+
+                //U32 const xxh = XXH32(header, length, 0);
+                //return (BYTE)(xxh >> 8);
+                //    *dstPtr = LZ4F_headerChecksum(headerStart, dstPtr - headerStart);
                 LZ4FileHeaderInfo.WriteHeader(_innerStream, fileHeaderInfo);
             }
             LZ4HeaderChunkInfo chunkInfo = new LZ4HeaderChunkInfo();

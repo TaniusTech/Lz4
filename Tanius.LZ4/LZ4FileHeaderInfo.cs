@@ -60,12 +60,22 @@ namespace LZ4
             {
                 throw new NotImplementedException();
             }
+            byte[] buffer = new byte[] { 
+                                headerInfo.frameDescriptor_FLG, 
+                                headerInfo.frameDescriptor_BD };
+            var xxh = Extensions.Data.XXHash32CryptoServiceProvider.Create(0);
+            byte[] hash = xxh.ComputeHash(buffer, 0, buffer.Length);
+            headerInfo.frameDescriptor_HC = hash[1];
             stream.WriteByte(headerInfo.frameDescriptor_HC);
         }
 
         public BlockMaximumSize FrameDescriptor_BD_BlockMaxSize {
             get => (BlockMaximumSize)((frameDescriptor_BD & 0b0111_0000) >> 4);
             set => frameDescriptor_BD = (byte)((int)value << 4);
+        }
+        public byte FrameDescriptor_HC {
+            get => frameDescriptor_HC;
+            set => frameDescriptor_HC = value;
         }
 
         public bool FrameDescriptor_FLG_BChecksum {
